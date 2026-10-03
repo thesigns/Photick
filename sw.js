@@ -1,7 +1,7 @@
 // Offline support: the app's files are served from the cache straight away
 // and refreshed from the network in the background, so updates show up on the next launch.
 
-const CACHE = 'photick-v3';
+const CACHE = 'photick-v4';
 const FILES = [
   './',
   'index.html',

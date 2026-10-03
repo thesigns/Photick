@@ -4,7 +4,7 @@ Spin the wheel, get a photo topic, go out and shoot it.
 
 **Try it: [thesigns.github.io/Photick](https://thesigns.github.io/Photick/)** — open it on your phone and add it to your home screen.
 
-A huge wheel holds about 400 photo topics — "solitude in a crowd", "light and shadow", "rhythm of nature", "reflections". Flick it with your thumb and it lands on one. That's your topic until you spin again. Take a photo with your phone and share it: the file is already named after the date and topic and comes with a caption.
+A huge wheel holds about 400 photo topics — "solitude in a crowd", "light and shadow", "rhythm of nature", "reflections". Flick it with your thumb and it lands on one. That's your topic until you spin again — take your phone's camera and go find it.
 
 ## How it works
 
@@ -12,14 +12,12 @@ A huge wheel holds about 400 photo topics — "solitude in a crowd", "light and 
 - **No re-rolls.** Whatever comes up is your topic.
 - **The wheel shrinks.** A drawn topic doesn't come back until you've drawn all of them. The draw is truly random — the animation only shows the result.
 - **A hint for every topic.** One sentence that points the way without giving the answer — and explains photo terms like "high key" or "rule of thirds".
-- **Take a photo** opens a camera at full quality — inside the app on Android, your phone's camera app on iPhone.
-- **Share** sends the photo wherever you like — Google Photos, iCloud, Instagram, a chat — named like `photick-2026-10-04-solitude-in-a-crowd.jpg`, with the caption `solitude in a crowd · Photick, 4 Oct 2026 #photick`. If the browser can't share files, it saves the file instead.
 - **English and Polish.** The app follows your phone's language and has an EN/PL switch.
 - **Works offline** and can be installed on the home screen.
 
 ## Privacy
 
-There are no accounts, no server and no tracking. Photos stay on your phone unless you share them yourself. The wheel's progress is kept only in your browser.
+There are no accounts, no server and no tracking. The app never sees your photos. The wheel's progress is kept only in your browser.
 
 ## Technology
 
@@ -27,7 +25,7 @@ Plain HTML, CSS and JavaScript — no frameworks, no build step, no dependencies
 
 ```
 index.html, style.css   the app
-js/app.js               screens, camera, sharing
+js/app.js               screens
 js/wheel.js             the wheel's rules: one spin a day, fair draw, shrinking wheel
 js/wheel-view.js        drawing the wheel and spinning it with your thumb
 js/i18n.js              interface strings (English, Polish)

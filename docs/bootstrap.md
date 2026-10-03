@@ -4,15 +4,14 @@ This document describes the idea, the constraints and the order of work.
 
 ## The idea in one paragraph
 
-You spin a huge wheel of about 400 photo topics, the kind you'd see in a photo contest: "solitude in a crowd", "light and shadow", "rhythm of nature", "reflections". It lands on one — that's your topic. You can spin once per calendar day, and the topic stays until you spin again, so you can shoot it for as many days as you like. A drawn topic doesn't come back until every topic on the wheel has been drawn: the wheel visibly shrinks. You tap "Take a photo", the phone's own camera opens, and afterwards the app offers to share the photo — to Google Photos, iCloud, Instagram, a chat, anywhere. The file is already named after the date and topic and comes with a caption. The app judges nothing.
+You spin a huge wheel of about 400 photo topics, the kind you'd see in a photo contest: "solitude in a crowd", "light and shadow", "rhythm of nature", "reflections". It lands on one — that's your topic. You can spin once per calendar day, and the topic stays until you spin again, so you can shoot it for as many days as you like. A drawn topic doesn't come back until every topic on the wheel has been drawn: the wheel visibly shrinks. Each topic comes with a one-sentence hint. Photos are taken with the phone's own camera; the app gives the topic and nothing else — it doesn't take, store, share or judge photos.
 
 ## Hard constraints
 
 - **PWA, fully static.** Hosted on GitHub Pages. No backend, no database, no accounts, no API keys, no tracking.
 - **Vanilla JS + HTML + CSS.** No frameworks and no build step, unless one turns out to be truly necessary — ask first in that case.
 - **Works offline** after the first launch (service worker) and can be installed on the home screen.
-- **Photos at full quality, without losing them.** Where the browser can take full-resolution stills itself (`ImageCapture`, i.e. Chrome on Android), the camera runs inside the page. Elsewhere (iPhone) the phone's camera app is used (`<input type="file" accept="image/*" capture="environment">`). Some phones also let you pick from the gallery there; that's fine — nothing is being judged.
-- **Nothing leaves the phone** unless the user shares it themselves. The only thing the app keeps is the wheel's progress and the chosen language, in the browser's local storage.
+- **Nothing leaves the phone.** The only thing the app keeps is the wheel's progress and the chosen language, in the browser's local storage.
 - **Interface in English and Polish.** The language follows the phone's settings (Polish for `pl`, English otherwise) and can be switched with the EN/PL button; the choice is remembered. README, this document and code comments are in English.
 
 ## How it works
@@ -48,43 +47,33 @@ The list is built into the app (`data/topics.json`, 400 topics):
 - `node tools/check-topics.mjs` checks the file: unique ids, both languages, a hint in each language within the length limit, no topic worded the same way twice.
 - Interface strings live in `js/i18n.js`; adding a language means a new entry there and a new field on every topic.
 
-### Photo and sharing
-1. "Take a photo" opens a camera:
-   - **In-app camera** where `ImageCapture` exists (Chrome on Android): live preview (`getUserMedia`, rear camera, largest size offered) and a shutter. The photo is a full-resolution still from `ImageCapture.takePhoto()`; if that fails, the current video frame is used. Why not the camera app: opening it sends Chrome to the background, Android often kills it there for lack of memory, and the photo is lost with "Not enough memory to complete the previous operation" — this happened on the first phone test.
-   - **The phone's camera app** everywhere else (iPhone), through a hidden file input. Also offered as a fallback when the in-app camera is denied or fails.
-   - The camera stops when you leave the screen or the app goes to the background.
-2. The preview screen shows the photo with the date and topic, plus "Retake" and "Share".
-3. The file is renamed to `photick-YYYY-MM-DD-topic.jpg` (local date, topic in the current language with accents removed, e.g. `photick-2026-10-04-swiatlo-i-cien.jpg`).
-4. "Share" uses the Web Share API with the file, a title (the topic) and a caption: `topic · Photick, 4 Oct 2026 #photick` (date in the current language). Some apps drop the caption; the file name usually survives.
-5. Where sharing files isn't available (some desktop browsers) the button says "Save" and downloads the file.
-
 ### Offline
-`sw.js` caches the app's files on install (bypassing the HTTP cache, so a new version never mixes with old files) and serves them stale-while-revalidate: instantly from the cache, refreshed from the network in the background. A new version shows up on the next launch. Bump `CACHE` when the list of files changes.
+`sw.js` caches the app's files on install (bypassing the HTTP cache, so a new version never mixes with old files) and serves them stale-while-revalidate: instantly from the cache, refreshed from the network in the background. A new version shows up on the next launch. Bump `CACHE` when the list of files changes or a release changes files that depend on each other (e.g. HTML and the script that uses it), so the new version is installed as a whole.
 
 ## Milestones
 
 After each stage, stop and wait until I've tested on the phone. Don't move on by yourself.
 
-**M1 — topic and sharing.** Topic screen, the phone's camera, preview, share/save, PWA (manifest, icons, service worker, offline). Minimalist look made for the phone, light and dark theme following the system setting. English and Polish. Done.
+**M1 — topic and sharing.** Topic screen, the phone's camera, preview, share/save, PWA (manifest, icons, service worker, offline). Minimalist look made for the phone, light and dark theme following the system setting. English and Polish. Done; taking and sharing photos were removed later (see History).
 
 **M2 — the wheel.** Personal wheel instead of a shared topic of the day: one spin per calendar day, the topic stays until the next spin, no re-rolls, fair draw, shrinking wheel. A hint for every topic, in both languages. ← current
 
 ## Ideas for later (not now)
 
-- an optional caption burned into the photo, so the topic survives apps that drop captions,
 - a list of your drawn topics, or a local diary of thumbnails (needs care with storage and export),
 - a daily reminder via a calendar file (`.ics`), since push notifications need a server,
-- Android extras: an app-icon shortcut, Photick as a share target,
+- an app-icon shortcut on Android,
 - an AI "juror" that comments on the photo (needs a small server and a paid API; photos would leave the phone).
 
 ## History
 
 - First prototype: scored photos on the phone with CLIP (transformers.js) against concrete, findable topics ("bench", "postbox") grouped by area. It worked for concrete objects but couldn't judge contest-style topics, so it was dropped.
 - Then: one shared topic of the day for everyone, computed from the date. Replaced by the personal wheel, which gives a reason to come back and a visible sense of progress.
+- Taking and sharing photos in the app (in-app camera on Android, the camera app on iPhone, a preview, sharing a file named after the date and topic) didn't work well enough on real phones and was removed. The app only gives the topic; people use their own camera.
 
 ## Testing on a computer
 
-`node tools/serve.mjs`, then `http://localhost:8080/`. On a computer the camera button opens a file picker; "Share" opens the system share dialog if the browser supports it, otherwise it becomes "Save". Because of the service worker, a change shows up after the second reload (or tick "Update on reload" in DevTools → Application → Service workers). To spin again during testing, run `localStorage.removeItem('photick.wheel')` in the console and reload.
+`node tools/serve.mjs`, then `http://localhost:8080/`. Because of the service worker, a change shows up after the second reload (or tick "Update on reload" in DevTools → Application → Service workers). To spin again during testing, run `localStorage.removeItem('photick.wheel')` in the console and reload.
 
 ## Way of working
 
