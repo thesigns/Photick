@@ -11,7 +11,7 @@ You spin a huge wheel of about 400 photo topics, the kind you'd see in a photo c
 - **PWA, fully static.** Hosted on GitHub Pages. No backend, no database, no accounts, no API keys, no tracking.
 - **Vanilla JS + HTML + CSS.** No frameworks and no build step, unless one turns out to be truly necessary — ask first in that case.
 - **Works offline** after the first launch (service worker) and can be installed on the home screen.
-- **The phone's own camera, at full quality** (`<input type="file" accept="image/*" capture="environment">`). Some phones also let you pick from the gallery here; that's fine — nothing is being judged.
+- **Photos at full quality, without losing them.** Where the browser can take full-resolution stills itself (`ImageCapture`, i.e. Chrome on Android), the camera runs inside the page. Elsewhere (iPhone) the phone's camera app is used (`<input type="file" accept="image/*" capture="environment">`). Some phones also let you pick from the gallery there; that's fine — nothing is being judged.
 - **Nothing leaves the phone** unless the user shares it themselves. The only thing the app keeps is the wheel's progress and the chosen language, in the browser's local storage.
 - **Interface in English and Polish.** The language follows the phone's settings (Polish for `pl`, English otherwise) and can be switched with the EN/PL button; the choice is remembered. README, this document and code comments are in English.
 
@@ -49,7 +49,10 @@ The list is built into the app (`data/topics.json`, 400 topics):
 - Interface strings live in `js/i18n.js`; adding a language means a new entry there and a new field on every topic.
 
 ### Photo and sharing
-1. "Take a photo" opens the phone's camera through a hidden file input.
+1. "Take a photo" opens a camera:
+   - **In-app camera** where `ImageCapture` exists (Chrome on Android): live preview (`getUserMedia`, rear camera, largest size offered) and a shutter. The photo is a full-resolution still from `ImageCapture.takePhoto()`; if that fails, the current video frame is used. Why not the camera app: opening it sends Chrome to the background, Android often kills it there for lack of memory, and the photo is lost with "Not enough memory to complete the previous operation" — this happened on the first phone test.
+   - **The phone's camera app** everywhere else (iPhone), through a hidden file input. Also offered as a fallback when the in-app camera is denied or fails.
+   - The camera stops when you leave the screen or the app goes to the background.
 2. The preview screen shows the photo with the date and topic, plus "Retake" and "Share".
 3. The file is renamed to `photick-YYYY-MM-DD-topic.jpg` (local date, topic in the current language with accents removed, e.g. `photick-2026-10-04-swiatlo-i-cien.jpg`).
 4. "Share" uses the Web Share API with the file, a title (the topic) and a caption: `topic · Photick, 4 Oct 2026 #photick` (date in the current language). Some apps drop the caption; the file name usually survives.

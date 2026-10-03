@@ -12,7 +12,7 @@ A huge wheel holds about 400 photo topics — "solitude in a crowd", "light and 
 - **No re-rolls.** Whatever comes up is your topic.
 - **The wheel shrinks.** A drawn topic doesn't come back until you've drawn all of them. The draw is truly random — the animation only shows the result.
 - **A hint for every topic.** One sentence that points the way without giving the answer — and explains photo terms like "high key" or "rule of thirds".
-- **Take a photo** opens your phone's own camera, at full quality.
+- **Take a photo** opens a camera at full quality — inside the app on Android, your phone's camera app on iPhone.
 - **Share** sends the photo wherever you like — Google Photos, iCloud, Instagram, a chat — named like `photick-2026-10-04-solitude-in-a-crowd.jpg`, with the caption `solitude in a crowd · Photick, 4 Oct 2026 #photick`. If the browser can't share files, it saves the file instead.
 - **English and Polish.** The app follows your phone's language and has an EN/PL switch.
 - **Works offline** and can be installed on the home screen.

@@ -71,7 +71,9 @@ function applyLanguage() {
   $('wheel-hint').textContent = t().spinHint;
   $('spin').textContent = t().spin;
   $('retake').textContent = t().retake;
-  for (const id of ['close', 'wheel-back']) $(id).setAttribute('aria-label', t().back);
+  $('cam-native').textContent = t().useCameraApp;
+  $('shutter').setAttribute('aria-label', t().take);
+  for (const id of ['close', 'wheel-back', 'cam-close']) $(id).setAttribute('aria-label', t().back);
   $('photo').alt = t().photoAlt;
   const next = nextLanguage();
   for (const btn of document.querySelectorAll('.lang')) {
@@ -245,22 +247,112 @@ function showNote(text) {
   $('note').hidden = false;
 }
 
-// The button opens the phone's own camera through a hidden file input.
-$('take').addEventListener('click', () => $('camera').click());
-$('retake').addEventListener('click', () => $('camera').click());
-$('camera').addEventListener('change', (e) => {
+$('share').addEventListener('click', share);
+$('close').addEventListener('click', closePreview);
+
+// ---------- camera ----------
+
+// Opening the phone's camera app sends the browser to the background, and on Android it's often
+// killed there for lack of memory — the photo is lost ("not enough memory to complete the operation").
+// Where the browser can take full-resolution photos itself (ImageCapture: Chrome on Android), the
+// camera runs inside the page instead. Elsewhere (iPhone) the camera app is used; it works fine there.
+const IN_APP_CAMERA = 'ImageCapture' in window && !!navigator.mediaDevices?.getUserMedia;
+let stream = null;
+
+function takePhoto() {
+  if (IN_APP_CAMERA) openCamera();
+  else $('camera-input').click();
+}
+
+async function openCamera() {
+  show('camera');
+  $('cam-topic').textContent = topicText(currentTopic(state.topics, state.wheel));
+  $('cam-msg').hidden = true;
+  $('shutter').disabled = true;
+  try {
+    // Asking for a huge size gets the largest the camera offers.
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 4096 }, height: { ideal: 4096 } },
+    });
+    if (current() !== 'camera') return stopCamera(); // the user already left
+    $('video').srcObject = stream;
+    await $('video').play();
+    $('shutter').disabled = false;
+  } catch (err) {
+    console.error(err);
+    stopCamera();
+    $('cam-msg-text').textContent = err.name === 'NotAllowedError' ? t().cameraDenied : t().cameraFailed;
+    $('cam-msg').hidden = false;
+  }
+}
+
+function stopCamera() {
+  stream?.getTracks().forEach((track) => track.stop());
+  stream = null;
+  $('video').srcObject = null;
+}
+
+// The current video frame, as a fallback when the camera can't take a still photo.
+function videoFrame() {
+  const video = $('video');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+}
+
+async function capture() {
+  if (!stream) return;
+  $('shutter').disabled = true;
+  $('flash').classList.add('on');
+  requestAnimationFrame(() => requestAnimationFrame(() => $('flash').classList.remove('on')));
+
+  const capturer = new ImageCapture(stream.getVideoTracks()[0]);
+  let blob = null;
+  try {
+    // A still photo at the sensor's full resolution, not just a video frame.
+    const caps = await capturer.getPhotoCapabilities();
+    const size = caps.imageWidth?.max ? { imageWidth: caps.imageWidth.max, imageHeight: caps.imageHeight.max } : {};
+    blob = await capturer.takePhoto(size);
+  } catch (err) {
+    console.warn('Full-resolution photo failed, trying the default size:', err);
+    try {
+      blob = await capturer.takePhoto();
+    } catch (err2) {
+      console.warn('Still photo failed, using a video frame:', err2);
+    }
+  }
+  blob ??= await videoFrame();
+  stopCamera();
+  openPreview(new File([blob], 'photo.jpg', { type: blob.type || 'image/jpeg' }));
+}
+
+$('take').addEventListener('click', takePhoto);
+$('retake').addEventListener('click', takePhoto);
+$('shutter').addEventListener('click', capture);
+$('cam-close').addEventListener('click', () => {
+  stopCamera();
+  route();
+});
+// If the in-app camera isn't allowed, the camera app is still an option.
+$('cam-native').addEventListener('click', () => $('camera-input').click());
+$('camera-input').addEventListener('change', (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if (file) openPreview(file);
 });
-$('share').addEventListener('click', share);
-$('close').addEventListener('click', closePreview);
 
 // ---------- lifecycle ----------
 
-// e.g. after midnight you can spin again.
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && current() === 'home') renderHome();
+  if (document.hidden) {
+    stopCamera(); // the camera shouldn't run in the background
+    return;
+  }
+  if (current() === 'home') renderHome(); // e.g. after midnight you can spin again
+  if (current() === 'camera' && $('cam-msg').hidden) openCamera();
 });
 
 async function init() {
