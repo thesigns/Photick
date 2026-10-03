@@ -2,6 +2,8 @@
 
 Spin the wheel, get a photo topic, go out and shoot it.
 
+**Try it: [thesigns.github.io/Photick](https://thesigns.github.io/Photick/)** — open it on your phone and add it to your home screen.
+
 A huge wheel holds about 400 photo topics — "solitude in a crowd", "light and shadow", "rhythm of nature", "reflections". Flick it with your thumb and it lands on one. That's your topic until you spin again. Take a photo with your phone and share it: the file is already named after the date and topic and comes with a caption.
 
 ## How it works
