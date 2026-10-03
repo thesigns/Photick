@@ -54,7 +54,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 }
 .screen[hidden] { display: none; }
 
-@keyframes fade { from { opacity: 0; transform: translateY(6px); } }
+/* Scaling down (not sliding) so the screen never sticks out and makes the page scrollable. */
+@keyframes fade { from { opacity: 0; transform: scale(.985); } }
 
 .bar {
   display: flex;
@@ -94,14 +95,21 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 
 /* ---------- home ---------- */
 
+/* Home and wheel are exactly one screen tall; nothing scrolls. */
+#home, #wheel-screen { height: 100vh; height: 100dvh; }
+
+/* Content centred by two flexible spacers: unlike justify-content: center, they shrink to nothing
+   instead of pushing the top out of reach if a very long topic still doesn't fit. */
 .today {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 40px 0;
+  padding: 16px 0;
 }
-.date { margin: 0 0 28px; color: var(--muted); font-size: 15px; }
+.today::before, .today::after { content: ""; flex: 1; }
+.date { margin: 0 0 20px; color: var(--muted); font-size: 15px; }
 .topic {
   margin: 8px 0 0;
   font-size: clamp(44px, 13vw, 72px);
@@ -150,7 +158,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .wheel {
   position: relative;
   flex: 1;
-  min-height: 320px;
+  min-height: 200px;
   margin: 8px calc(var(--pad) * -1) 16px;
   overflow: hidden;
   touch-action: none;

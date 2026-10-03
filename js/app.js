@@ -112,13 +112,33 @@ function renderHome() {
   $('next-spin').hidden = spinnable;
   $('next-spin').textContent = left === 0 ? t().lastOne : t().nextSpin;
   $('take').disabled = false;
+  if (current() === 'home') fitHome();
 }
+
+// The home screen is exactly one screen tall. A long topic with its hint may not fit on a small
+// phone, so the topic's font shrinks step by step until everything does (short topics stay big).
+const MIN_TOPIC_PX = 28;
+function fitHome() {
+  const box = document.querySelector('#home .today');
+  const topic = $('topic');
+  topic.style.fontSize = '';
+  let size = parseFloat(getComputedStyle(topic).fontSize);
+  while (box.scrollHeight > box.clientHeight && size > MIN_TOPIC_PX) {
+    size = Math.max(MIN_TOPIC_PX, size - 2);
+    topic.style.fontSize = `${size}px`;
+  }
+}
+
+// e.g. rotating the phone or the browser bar appearing.
+addEventListener('resize', () => {
+  if (current() === 'home') fitHome();
+});
 
 // Shows the topic, or the wheel if there's no topic yet.
 function route() {
   if (state.topics && !currentTopic(state.topics, state.wheel)) return openWheel();
-  renderHome();
   show('home');
+  renderHome();
 }
 
 // ---------- the wheel ----------
